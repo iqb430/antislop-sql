@@ -49,7 +49,8 @@ def is_safe_query(sql_query: str) -> tuple[bool, str]:
     return True, "Valid Tokens"
 
 def call_ollama(prompt: str, model: str = "llama3") -> str:
-    url = "http://localhost:11434/api/generate"
+    import os
+    url = os.environ.get("OLLAMA_URL", "http://localhost:11434/api/generate")
     
     system_prompt = (
         "You are an expert Text-to-SQL compiler. "
@@ -93,7 +94,7 @@ def run_agent_loop(user_query: str, max_retries: int = 3) -> dict:
     print(f"{'='*50}")
     
     # 1. RAG Schema Routing
-    relevant_schemas = get_relevant_tables(user_query, top_k=2)
+    relevant_schemas = get_relevant_tables(user_query, top_k=3)
     schema_context = "\n".join(relevant_schemas)
     
     history_prompt = (
@@ -114,6 +115,7 @@ def run_agent_loop(user_query: str, max_retries: int = 3) -> dict:
             continue
             
         # 3. Read-Only Hardware Execution
+        conn = None
         try:
             conn = sqlite3.connect(DB_URI, uri=True)
             cursor = conn.cursor()
@@ -121,7 +123,6 @@ def run_agent_loop(user_query: str, max_retries: int = 3) -> dict:
             
             columns = [desc[0] for desc in cursor.description] if cursor.description else []
             data = cursor.fetchall()
-            conn.close()
             
             print(f" [✔] SUCCESS: Query berhasil dieksekusi!")
             return {
@@ -141,6 +142,10 @@ def run_agent_loop(user_query: str, max_retries: int = 3) -> dict:
                 f"Database Execution Error: {e}\n"
                 "Fix the SQL query by correctly matching the table schema columns."
             )
+            
+        finally:
+            if conn:
+                conn.close()
             
     return {
         "success": False,

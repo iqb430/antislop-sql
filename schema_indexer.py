@@ -42,7 +42,7 @@ def index_to_vector_db():
     )
     print("[+] Indexing Selesai (Idempotent: Aman untuk di-run berulang kali).")
 
-def get_relevant_tables(query: str, top_k: int = 2) -> list:
+def get_relevant_tables(query: str, top_k: int = 3) -> list:
     print(f"\n[*] QUERY USER: '{query}'")
     print(f"[*] Mencari {top_k} tabel paling relevan secara semantik...")
     
