@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  iron-sql:
+    build: .
+    environment:
+      # Route to host network Ollama if running Mac/Linux locally,
+      # or point to a remote Ollama server.
+      - OLLAMA_URL=http://host.docker.internal:11434/api/generate
+    volumes:
+      - ./chroma_db:/app/chroma_db
+    network_mode: "bridge"
